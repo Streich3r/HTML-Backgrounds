@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animierter Punkte-Hintergrund</title>
+    <!-- Tailwind CSS für einfache Layout-Helfer (optional, aber nützlich) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Der Körper füllt den gesamten Bildschirm und verhindert Scrollbalken */
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0d0d0d; /* Dunkler Hintergrund */
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Das Canvas füllt den gesamten Viewport */
+        #dotCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1; /* Sorgt dafür, dass es der Hintergrund ist */
+            opacity: 0.9; /* Leicht transparent für einen gedämpften Look */
+        }
+
+        /* Stil für den Inhalt, der über dem Canvas liegt */
+        .content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dotCanvas"></canvas>
+
+    <script>
+        // Holen Sie sich das Canvas-Element und den 2D-Rendering-Kontext
+        const canvas = document.getElementById('dotCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Konstanten für die Animation
+        const DOT_RADIUS = 2; // Radius jedes Punktes
+        const SPACING = 30;   // Abstand zwischen den Punkten
+        const WAVE_AMPLITUDE = 15; // Höhe der Welle (wie stark die Punkte wackeln)
+        const WAVE_SPEED = 0.0015; // Geschwindigkeit der Wellenbewegung
+        const COLOR_SPEED = 0.01; // Geschwindigkeit des Farbwechsels (RGB-Zyklus)
+
+        let frameCount = 0;
+        let cols, rows;
+
+        // Funktion zur Anpassung der Canvas-Größe an das Fenster
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // Berechnen, wie viele Spalten und Zeilen wir für die aktuelle Größe benötigen
+            cols = Math.ceil(canvas.width / SPACING) + 1;
+            rows = Math.ceil(canvas.height / SPACING) + 1;
+        }
+
+        // Führt die Größenanpassung beim Laden und bei jeder Fensteränderung aus
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Haupt-Zeichen- und Animations-Schleife
+        function animate() {
+            // Die Zeit (frameCount) dient als universelle Variable für die Animation
+            frameCount++;
+
+            // 1. Hintergrund löschen
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Basis-Farbwechsel basierend auf der Zeit
+            // HSL (Hue, Saturation, Lightness) ist ideal für fließende Farbzyklen
+            // Die HUE (Farbton) wird kontinuierlich von 0 bis 360 durchlaufen
+            const baseHue = (frameCount * COLOR_SPEED) % 360;
+
+            // 3. Punkte zeichnen
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const x = j * SPACING;
+                    let y = i * SPACING;
+
+                    // 4. Wellen-Effekt berechnen
+                    // Die Sinus-Funktion erzeugt eine glatte Wellenform.
+                    // Die Welle bewegt sich nach rechts (x-Achse) und ändert sich mit der Zeit.
+                    const waveOffset = Math.sin(j * 0.5 + frameCount * WAVE_SPEED) * WAVE_AMPLITUDE;
+                    y += waveOffset;
+
+                    // 5. Individuelle Punkt-Farbe
+                    // Jeder Punkt hat eine leicht andere Farbe (ein Offset zur baseHue),
+                    // basierend auf seiner vertikalen Position (i)
+                    const dotHue = (baseHue + (i * 5)) % 360;
+
+                    // Setze den Stil des aktuellen Punktes
+                    // Saturation (S): 70% | Lightness (L): 60%
+                    ctx.fillStyle = `hsl(${dotHue}, 70%, 60%)`;
+
+                    // 6. Punkt zeichnen (Kreis)
+                    ctx.beginPath();
+                    // arc(x, y, radius, startAngle, endAngle)
+                    ctx.arc(x, y, DOT_RADIUS, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Fordert den Browser auf, die Funktion vor dem nächsten Redraw erneut aufzurufen (ca. 60 FPS)
+            requestAnimationFrame(animate);
+        }
+
+        // Starten der Animation, sobald die Seite geladen ist
+        window.onload = function() {
+            animate();
+        };
+
+    </script>
+</body>
+</html>

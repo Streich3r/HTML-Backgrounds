@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Star Wars Console – Loop</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #000;
+      color: #0f0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      overflow: hidden;
+    }
+
+    .console {
+      position: absolute;
+      inset: 0;
+      padding: 16px;
+      white-space: pre;
+      line-height: 1.4;
+      letter-spacing: 0.02em;
+      text-shadow: 0 0 6px rgba(0,255,0,0.25), 0 0 18px rgba(0,255,0,0.12);
+    }
+
+    /* Blinker/Cursor */
+    .cursor {
+      display: inline-block;
+      width: 0.6ch;
+      height: 1em;
+      background: #0f0;
+      margin-left: 2px;
+      vertical-align: -0.15em;
+      box-shadow: 0 0 8px rgba(0,255,0,0.6);
+      animation: blink 1s steps(1, end) infinite;
+    }
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    /* Optional: leichte „Scanline“-Anmutung */
+    .console::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(0, 255, 0, 0.03) 0px,
+        rgba(0, 255, 0, 0.03) 1px,
+        transparent 2px,
+        transparent 3px
+      );
+      pointer-events: none;
+      mix-blend-mode: lighten;
+    }
+  </style>
+</head>
+<body>
+  <div class="console" id="console">
+    <span id="line"></span><span class="cursor"></span>
+  </div>
+
+  <script>
+    // Passe hier deinen „ersten Teil“ an:
+    const MESSAGE = "A LONG TIME AGO IN A GALAXY FAR, FAR AWAY...";
+    const TYPE_SPEED_MS = 50;      // Tippgeschwindigkeit
+    const DELETE_SPEED_MS = 25;    // Löschgeschwindigkeit
+    const HOLD_AFTER_TYPE_MS = 1200; // Pause nach vollständigem Tippen
+    const HOLD_AFTER_DELETE_MS = 700; // Pause nach Löschen
+
+    const lineEl = document.getElementById('line');
+
+    let i = 0;
+    let deleting = false;
+
+    function loop() {
+      if (!deleting) {
+        // Tippen
+        lineEl.textContent = MESSAGE.slice(0, i);
+        i++;
+        if (i <= MESSAGE.length) {
+          setTimeout(loop, TYPE_SPEED_MS);
+        } else {
+          // Vollständig getippt -> halten, dann löschen
+          setTimeout(() => { deleting = true; loop(); }, HOLD_AFTER_TYPE_MS);
+        }
+      } else {
+        // Löschen
+        i--;
+        lineEl.textContent = MESSAGE.slice(0, Math.max(i, 0));
+        if (i > 0) {
+          setTimeout(loop, DELETE_SPEED_MS);
+        } else {
+          // Komplett gelöscht -> halten, dann wieder tippen
+          setTimeout(() => { deleting = false; loop(); }, HOLD_AFTER_DELETE_MS);
+        }
+      }
+    }
+
+    // Start
+    loop();
+
+    // Optional: Fenster-Resizes sind egal, da kein Canvas verwendet wird
+  </script>
+</body>
+</html>
